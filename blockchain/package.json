@@ -1,0 +1,16 @@
+{
+  "name": "blockchain",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "ethers": "^5.8.0",
+    "hardhat": "^2.22.3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0"
+  }
+}

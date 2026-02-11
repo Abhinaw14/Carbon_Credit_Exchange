@@ -1,0 +1,61 @@
+############################
+# Node.js
+############################
+node_modules/
+**/node_modules/
+
+############################
+# Environment Files
+############################
+.env
+**/.env
+
+############################
+# Logs
+############################
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+############################
+# OS Files
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# Hardhat / Blockchain
+############################
+cache/
+artifacts/
+blockchain/coverage/
+coverage.json
+
+# TypeChain
+typechain/
+typechain-types/
+
+# Hardhat Ignition
+ignition/deployments/
+
+############################
+# Build Folders (Frontend)
+############################
+build/
+dist/
+.next/
+out/
+
+############################
+# MongoDB
+############################
+data/
+*.sqlite
+
+############################
+# Misc
+############################
+*.swp
+*.tmp
+.vscode/

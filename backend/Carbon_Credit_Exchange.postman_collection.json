@@ -1,0 +1,130 @@
+{
+    "info": {
+        "name": "Carbon Credit Exchange",
+        "description": "API collection for the Carbon Credit Exchange Backend",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{baseUrl}}/",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        ""
+                    ]
+                },
+                "description": "Check if the server is running."
+            }
+        },
+        {
+            "name": "Credits",
+            "item": [
+                {
+                    "name": "Submit Carbon Credit",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/credits/submit",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "credits",
+                                "submit"
+                            ]
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"producer\": \"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266\",\n  \"metadata\": {\n    \"projectName\": \"Solar Farm Alpha\",\n    \"location\": \"Tamil Nadu, India\",\n    \"amount\": 150,\n    \"vintage\": \"2025\",\n    \"methodology\": \"VM0006\"\n  },\n  \"documents\": [\n    \"https://example.com/reports/solar-farm-alpha.pdf\"\n  ]\n}"
+                        },
+                        "description": "Submit a new carbon credit for admin review. Status will be PENDING."
+                    }
+                },
+                {
+                    "name": "Get Pending Credits",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/credits/pending",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "credits",
+                                "pending"
+                            ]
+                        },
+                        "description": "Retrieve all carbon credit submissions with PENDING status."
+                    }
+                },
+                {
+                    "name": "Approve Credit",
+                    "request": {
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/credits/:id/approve",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "credits",
+                                ":id",
+                                "approve"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "PASTE_CREDIT_ID_HERE",
+                                    "description": "MongoDB _id of the credit submission to approve"
+                                }
+                            ]
+                        },
+                        "description": "Approve a pending carbon credit submission. Replace :id with the actual _id from GET /api/credits/pending."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Auctions",
+            "item": [
+                {
+                    "name": "Get All Auctions",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auctions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auctions"
+                            ]
+                        },
+                        "description": "Retrieve all cached auctions from MongoDB. Data is populated automatically by the blockchain event listener."
+                    }
+                }
+            ]
+        }
+    ]
+}

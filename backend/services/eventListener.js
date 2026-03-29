@@ -1,70 +1,104 @@
 const { auctionContract } = require('../config/blockchain');
 const AuctionCache = require('../models/AuctionCache');
 
-const setupEventListeners = () => {
-    console.log('Setting up Blockchain Event Listeners...');
+let lastCheckedBlock = 0;
 
-    // 1. Listen to AuctionCreated
-    auctionContract.on('AuctionCreated', async (auctionId, seller, tokenId, endTime, event) => {
-        console.log(`Event: AuctionCreated - ID: ${auctionId}, Seller: ${seller}, Token: ${tokenId}`);
-        try {
-            await AuctionCache.create({
-                auctionId: auctionId.toString(),
-                tokenId: tokenId.toString(),
-                seller: seller.toLowerCase(),
-                endTime: Number(endTime),
-                status: 'ACTIVE',
-                highestBid: '0',
-                bids: []
-            });
-            console.log(`Auction ${auctionId} cached successfully.`);
-        } catch (err) {
-            console.error('Error caching auction creation:', err);
-        }
-    });
+const setupEventListeners = async () => {
+    console.log('Setting up Blockchain Event Listeners (polling mode)...');
 
-    // 2. Listen to BidPlaced
-    auctionContract.on('BidPlaced', async (auctionId, bidder, amount, event) => {
-        console.log(`Event: BidPlaced - ID: ${auctionId}, Bidder: ${bidder}, Amount: ${amount}`);
+    // Get current block as starting point
+    try {
+        const provider = auctionContract.runner.provider;
+        lastCheckedBlock = await provider.getBlockNumber();
+        console.log(`Starting event poll from block ${lastCheckedBlock}`);
+    } catch (err) {
+        console.error('Failed to get block number:', err.message);
+    }
+
+    // Poll every 3 seconds for new events
+    setInterval(async () => {
         try {
-            const auction = await AuctionCache.findOne({ auctionId: auctionId.toString() });
-            if (auction) {
-                auction.highestBid = amount.toString();
-                auction.highestBidder = bidder.toLowerCase();
-                auction.bids.push({
-                    bidder: bidder.toLowerCase(),
-                    amount: amount.toString(),
-                    timestamp: new Date()
-                });
-                await auction.save();
-                console.log(`Bid on Auction ${auctionId} recorded.`);
-            } else {
-                console.warn(`Auction ${auctionId} not found in cache.`);
+            const provider = auctionContract.runner.provider;
+            const currentBlock = await provider.getBlockNumber();
+
+            if (currentBlock <= lastCheckedBlock) return;
+
+            const fromBlock = lastCheckedBlock + 1;
+            const toBlock = currentBlock;
+
+            // Query AuctionCreated events
+            const createdEvents = await auctionContract.queryFilter('AuctionCreated', fromBlock, toBlock);
+            for (const event of createdEvents) {
+                const { auctionId, seller, tokenId, endTime } = event.args;
+                console.log(`Event: AuctionCreated - ID: ${auctionId}, Seller: ${seller}, Token: ${tokenId}`);
+                try {
+                    await AuctionCache.findOneAndUpdate(
+                        { auctionId: auctionId.toString() },
+                        {
+                            auctionId: auctionId.toString(),
+                            tokenId: tokenId.toString(),
+                            seller: seller.toLowerCase(),
+                            endTime: Number(endTime),
+                            status: 'ACTIVE',
+                            highestBid: '0',
+                            bids: []
+                        },
+                        { upsert: true, new: true }
+                    );
+                    console.log(`Auction ${auctionId} cached successfully.`);
+                } catch (err) {
+                    console.error('Error caching auction:', err.message);
+                }
             }
-        } catch (err) {
-            console.error('Error recording bid:', err);
-        }
-    });
 
-    // 3. Listen to AuctionFinalized
-    auctionContract.on('AuctionFinalized', async (auctionId, winner, amount, event) => {
-        console.log(`Event: AuctionFinalized - ID: ${auctionId}, Winner: ${winner}, Amount: ${amount}`);
-        try {
-            const auction = await AuctionCache.findOne({ auctionId: auctionId.toString() });
-            if (auction) {
-                auction.status = 'ENDED';
-                auction.finalized = true;
-                auction.winner = winner.toLowerCase(); // winner is the 2nd arg in event
-                // amount is the 3rd arg, which matches highestBid
-                await auction.save();
-                console.log(`Auction ${auctionId} finalized.`);
-            } else {
-                console.warn(`Auction ${auctionId} not found in cache.`);
+            // Query BidPlaced events
+            const bidEvents = await auctionContract.queryFilter('BidPlaced', fromBlock, toBlock);
+            for (const event of bidEvents) {
+                const { auctionId, bidder, amount } = event.args;
+                console.log(`Event: BidPlaced - ID: ${auctionId}, Bidder: ${bidder}, Amount: ${amount}`);
+                try {
+                    const auction = await AuctionCache.findOne({ auctionId: auctionId.toString() });
+                    if (auction) {
+                        auction.highestBid = amount.toString();
+                        auction.highestBidder = bidder.toLowerCase();
+                        auction.bids.push({
+                            bidder: bidder.toLowerCase(),
+                            amount: amount.toString(),
+                            transactionHash: event.transactionHash,
+                            timestamp: new Date()
+                        });
+                        await auction.save();
+                        console.log(`Bid on Auction ${auctionId} recorded.`);
+                    }
+                } catch (err) {
+                    console.error('Error recording bid:', err.message);
+                }
             }
+
+            // Query AuctionFinalized events
+            const finalizedEvents = await auctionContract.queryFilter('AuctionFinalized', fromBlock, toBlock);
+            for (const event of finalizedEvents) {
+                const { auctionId, winner, amount } = event.args;
+                console.log(`Event: AuctionFinalized - ID: ${auctionId}, Winner: ${winner}`);
+                try {
+                    const auction = await AuctionCache.findOne({ auctionId: auctionId.toString() });
+                    if (auction) {
+                        auction.status = 'ENDED';
+                        auction.finalized = true;
+                        auction.winner = winner.toLowerCase();
+                        await auction.save();
+                        console.log(`Auction ${auctionId} finalized.`);
+                    }
+                } catch (err) {
+                    console.error('Error finalizing auction:', err.message);
+                }
+            }
+
+            lastCheckedBlock = toBlock;
         } catch (err) {
-            console.error('Error finalizing auction:', err);
+            console.error('Event polling error:', err.message);
         }
-    });
+    }, 3000);
 };
 
 module.exports = setupEventListeners;

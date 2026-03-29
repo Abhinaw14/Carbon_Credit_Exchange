@@ -1,12 +1,18 @@
 const hre = require("hardhat");
+const fs = require("fs");
+const path = require("path");
+
+// Read addresses from shared config
+const addressesPath = path.join(__dirname, "../../frontend/contracts/addresses.json");
+const addresses = JSON.parse(fs.readFileSync(addressesPath, "utf8"));
 
 async function main() {
-  const auctionAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
-  const carbonCreditAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const auctionAddress = addresses.Auction;
+  const carbonCreditAddress = addresses.CarbonCredit;
 
   const tokenId = 1;
   const startingBid = hre.ethers.utils.parseEther("1"); // 1 ETH
-  const duration = 60; // 5 minutes
+  const duration = 60; // 60 seconds
 
   const Auction = await hre.ethers.getContractAt(
     "Auction",

@@ -28,7 +28,11 @@ const CarbonCreditSubmissionSchema = new mongoose.Schema({
         type: Date
     },
     blockchainTokenId: {
-        type: String // Populated after minting if available/tracked
+        type: String // Populated after minting
+    },
+    minted: {
+        type: Boolean,
+        default: false
     },
     createdAt: {
         type: Date,

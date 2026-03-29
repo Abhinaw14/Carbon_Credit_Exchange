@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const connectDB = require('./config/db');
 const creditRoutes = require('./routes/creditRoutes');
 const auctionRoutes = require('./routes/auctionRoutes');
+const authRoutes = require('./routes/authRoutes');
 const setupEventListeners = require('./services/eventListener');
 
 // Load env vars
@@ -23,6 +24,7 @@ app.use(helmet());
 app.use(morgan('dev'));
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/credits', creditRoutes);
 app.use('/api/auctions', auctionRoutes);
 

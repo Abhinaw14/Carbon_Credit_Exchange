@@ -1,9 +1,15 @@
 const hre = require("hardhat");
+const fs = require("fs");
+const path = require("path");
+
+// Read addresses from shared config
+const addressesPath = path.join(__dirname, "../../frontend/contracts/addresses.json");
+const addresses = JSON.parse(fs.readFileSync(addressesPath, "utf8"));
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
 
-  const carbonCreditAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const carbonCreditAddress = addresses.CarbonCredit;
 
   const CarbonCredit = await hre.ethers.getContractAt(
     "CarbonCredit",

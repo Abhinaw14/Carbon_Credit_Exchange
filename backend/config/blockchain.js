@@ -5,11 +5,11 @@ const carbonCreditArtifact = require('./abis/CarbonCredit.json');
 
 dotenv.config();
 
-const provider = new ethers.WebSocketProvider(process.env.RPC_URL);
+// Use HTTP JsonRpcProvider — more reliable with Hardhat node
+const RPC_URL = process.env.RPC_URL.replace('ws://', 'http://').replace('wss://', 'https://');
 
-// Contract Instances
-// Note: We only need read/listener access here, so provider is enough.
-// If backend needs to write (e.g. admin actions), we would need a Wallet.
+const provider = new ethers.JsonRpcProvider(RPC_URL);
+
 const auctionContract = new ethers.Contract(
     process.env.AUCTION_ADDRESS,
     auctionArtifact.abi,
@@ -22,8 +22,8 @@ const carbonCreditContract = new ethers.Contract(
     provider
 );
 
-module.exports = {
-    provider,
-    auctionContract,
-    carbonCreditContract
-};
+console.log('Blockchain provider connected to:', RPC_URL);
+console.log('Auction contract:', process.env.AUCTION_ADDRESS);
+console.log('CarbonCredit contract:', process.env.CARBON_CREDIT_ADDRESS);
+
+module.exports = { provider, auctionContract, carbonCreditContract };

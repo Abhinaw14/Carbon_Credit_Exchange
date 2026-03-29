@@ -1,8 +1,9 @@
 const express = require('express');
-const { getAuctions } = require('../controllers/auctionController');
+const { getAuctions, getAuctionById } = require('../controllers/auctionController');
 
 const router = express.Router();
 
 router.get('/', getAuctions);
+router.get('/:auctionId', getAuctionById);
 
 module.exports = router;

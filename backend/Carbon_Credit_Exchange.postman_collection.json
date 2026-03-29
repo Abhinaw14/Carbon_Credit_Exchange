@@ -1,13 +1,17 @@
 {
     "info": {
         "name": "Carbon Credit Exchange",
-        "description": "API collection for the Carbon Credit Exchange Backend",
+        "description": "Complete API collection for the Carbon Credit Exchange Backend",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
         {
             "key": "baseUrl",
             "value": "http://localhost:5000"
+        },
+        {
+            "key": "adminKey",
+            "value": "carbon_admin_secret_key_2026"
         }
     ],
     "item": [
@@ -59,7 +63,95 @@
                     }
                 },
                 {
-                    "name": "Get Pending Credits",
+                    "name": "Get All Credits",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/credits",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "credits"
+                            ]
+                        },
+                        "description": "Retrieve all credit submissions. Supports optional query filters: ?status=PENDING or ?producer=0x..."
+                    }
+                },
+                {
+                    "name": "Get All Credits (Filtered by Status)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/credits?status=APPROVED",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "credits"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "APPROVED"
+                                }
+                            ]
+                        },
+                        "description": "Get credits filtered by status (PENDING, APPROVED, REJECTED)."
+                    }
+                },
+                {
+                    "name": "Get All Credits (Filtered by Producer)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/credits?producer=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "credits"
+                            ],
+                            "query": [
+                                {
+                                    "key": "producer",
+                                    "value": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+                                }
+                            ]
+                        },
+                        "description": "Get all credits by a specific producer wallet address."
+                    }
+                },
+                {
+                    "name": "Get Credit by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/credits/:id",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "credits",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "PASTE_CREDIT_ID_HERE",
+                                    "description": "MongoDB _id of the credit submission"
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a single credit submission by its MongoDB _id."
+                    }
+                },
+                {
+                    "name": "Get Pending Credits (Admin)",
                     "request": {
                         "method": "GET",
                         "url": {
@@ -73,11 +165,17 @@
                                 "pending"
                             ]
                         },
-                        "description": "Retrieve all carbon credit submissions with PENDING status."
+                        "header": [
+                            {
+                                "key": "x-admin-key",
+                                "value": "{{adminKey}}"
+                            }
+                        ],
+                        "description": "Retrieve all PENDING credit submissions. Requires admin API key."
                     }
                 },
                 {
-                    "name": "Approve Credit",
+                    "name": "Approve Credit (Admin)",
                     "request": {
                         "method": "PATCH",
                         "url": {
@@ -94,12 +192,56 @@
                             "variable": [
                                 {
                                     "key": "id",
-                                    "value": "PASTE_CREDIT_ID_HERE",
-                                    "description": "MongoDB _id of the credit submission to approve"
+                                    "value": "PASTE_CREDIT_ID_HERE"
                                 }
                             ]
                         },
-                        "description": "Approve a pending carbon credit submission. Replace :id with the actual _id from GET /api/credits/pending."
+                        "header": [
+                            {
+                                "key": "x-admin-key",
+                                "value": "{{adminKey}}"
+                            }
+                        ],
+                        "description": "Approve a pending credit. Requires admin API key."
+                    }
+                },
+                {
+                    "name": "Reject Credit (Admin)",
+                    "request": {
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/credits/:id/reject",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "credits",
+                                ":id",
+                                "reject"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "PASTE_CREDIT_ID_HERE"
+                                }
+                            ]
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-admin-key",
+                                "value": "{{adminKey}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"reason\": \"Insufficient documentation provided\"\n}"
+                        },
+                        "description": "Reject a pending credit with a reason. Requires admin API key."
                     }
                 }
             ]
@@ -121,7 +263,78 @@
                                 "auctions"
                             ]
                         },
-                        "description": "Retrieve all cached auctions from MongoDB. Data is populated automatically by the blockchain event listener."
+                        "description": "Retrieve all cached auctions. Supports optional filter: ?status=ACTIVE"
+                    }
+                },
+                {
+                    "name": "Get Active Auctions",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auctions?status=ACTIVE",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auctions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "ACTIVE"
+                                }
+                            ]
+                        },
+                        "description": "Get only live/active auctions."
+                    }
+                },
+                {
+                    "name": "Get Ended Auctions",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auctions?status=ENDED",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auctions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "ENDED"
+                                }
+                            ]
+                        },
+                        "description": "Get only finalized/ended auctions."
+                    }
+                },
+                {
+                    "name": "Get Auction by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auctions/:auctionId",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auctions",
+                                ":auctionId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "auctionId",
+                                    "value": "1",
+                                    "description": "On-chain auction ID (e.g. 1, 2, 3...)"
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a single auction with full bid history by its on-chain auction ID."
                     }
                 }
             ]

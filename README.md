@@ -115,7 +115,7 @@ npm run dev
 
 ## Tech Stack
 
-- **Frontend:** React, Vite, Ethers.js, Tailwind CSS (or similar styling)
+- **Frontend:** React, Vite, Ethers.js, Tailwind CSS 
 - **Backend:** Node.js, Express.js, MongoDB, Mongoose, Ethers.js
 - **Blockchain:** Solidity, Hardhat, Ethers.js
 
